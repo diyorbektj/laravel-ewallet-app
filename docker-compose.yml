@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+    app:
+        build:
+            args:
+                user: sammy
+                uid: 1000
+            context: ./
+            dockerfile: ./docker/php/Dockerfile
+        image: bank
+        container_name: bank-app
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        networks:
+            - bank-app
+
+    web:
+        image: "nginx:alpine"
+        container_name: "laravel_webserver"
+        restart: unless-stopped
+        ports:
+            - 8080:80
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx:/etc/nginx/conf.d/
+        depends_on:
+            - app
+        networks:
+            - bank-app
+
+    db:
+        image: "postgres:15"
+        container_name: "laravel_db"
+        environment:
+            POSTGRES_USER: diyorbek
+            POSTGRES_PASSWORD: root
+            POSTGRES_DB: bank-app
+        volumes:
+            - ./docker/my-db:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            - bank-app
+
+networks:
+    bank-app:
+        driver: bridge
