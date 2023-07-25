@@ -3,11 +3,20 @@
 namespace App\Http\Controllers\Api\v1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\ClientRegisterRequest;
 use App\Http\Requests\Client\PhoneNumberRequest;
+use App\Services\AuthClientService;
 use Illuminate\Http\Request;
 
 class AuthClientController extends Controller
 {
+    private AuthClientService $authClientService;
+
+    public function __construct(AuthClientService $authClientService)
+    {
+        $this->authClientService = $authClientService;
+    }
+
     /**
      * @OA\Post(
      *   path="/api/auth/client-registers",
@@ -36,9 +45,7 @@ class AuthClientController extends Controller
      **/
     public function client_register_step_1(PhoneNumberRequest $request)
     {
-        $clientService = new ClientService();
-
-        return $clientService->verifyPhone($request);
+        return $this->authClientService->verifyPhone($request);
     }
 
     /**
@@ -89,8 +96,6 @@ class AuthClientController extends Controller
      **/
     public function client_register_step_2(ClientRegisterRequest $request)
     {
-        $clientService = new ClientService();
-
-        return $clientService->setClient($request);
+        return $this->authClientService->setClient($request);
     }
 }

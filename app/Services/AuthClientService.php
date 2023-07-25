@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Http\Requests\Client\ClientRegisterRequest;
 use App\Http\Requests\Client\PhoneNumberRequest;
+use App\Models\Account;
+use App\Models\Client;
 use App\Models\ClientRegister;
+use Carbon\Carbon;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -45,9 +49,9 @@ class AuthClientService
             'count' => 1,
         ]);
     }
-    public function setClient($request)
+    public function setClient(ClientRegisterRequest $request)
     {
-        $c_reg = ClientRegister::find($request->client_register_id);
+        $c_reg = ClientRegister::query()->find($request->client_register_id);
         $minute = config('client-api.limit_minute_to_verification_code_client');
 
         if ($c_reg && $c_reg->count >= 10) {
@@ -66,31 +70,19 @@ class AuthClientService
             DB::beginTransaction();
             $c_reg->step_2 = true;
             $c_reg->save();
-            $client = Client::where('phone', $c_reg->phone_number)->first();
+            $client = Client::query()->where('phone', $c_reg->phone_number)->first();
             if (! $client) {
-                $client = Client::create([
+                $client = Client::query()->create([
                     'phone' => $c_reg->phone_number,
                 ]);
             }
 
-            $pro = $this->set_promo_code($client->id);
-
 
             if (empty($client->user_id)) {
-                $account = new Accounts();
+                $account = new Account();
                 $account->model_type = Client::class;
                 $account->model_id = $client->id;
                 $account->save();
-                $id = (string) $account->id;
-                $str = str_repeat('0', abs(6 - strlen($id)));
-                $user = User::create([
-                    'login' => 'client'.$id,
-                    'password' => bcrypt('client'.$id),
-                    'status' => 1,
-                ]);
-                $client->user_id = $user->id;
-                $client->login = $str.$id;
-                $client->save();
             }
 
 
