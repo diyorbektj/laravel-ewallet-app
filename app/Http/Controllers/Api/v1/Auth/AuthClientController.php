@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 
 class AuthClientController extends Controller
 {
-    private AuthClientService $authClientService;
 
-    public function __construct(AuthClientService $authClientService)
+    public function __construct(
+        private AuthClientService $authClientService
+    )
     {
-        $this->authClientService = $authClientService;
     }
 
     /**
@@ -45,7 +45,7 @@ class AuthClientController extends Controller
      **/
     public function client_register_step_1(PhoneNumberRequest $request)
     {
-        return $this->authClientService->verifyPhone($request);
+        return $this->authClientService->verifyPhone($request->phone_numer);
     }
 
     /**
